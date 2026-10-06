@@ -3781,7 +3781,8 @@ void game() {
       s = "";
       continue;
     }
-    if (game_ply % 2 == 0 && game_w) {  //
+    bool is_user_turn = (game_ply % 2 == 0 && game_w) || (game_ply % 2 != 0 && !game_w);
+    if (is_user_turn) {  //
       generate_steps(0);
       bestmove[0].c1 = -1;
       getbm(0, s);
