@@ -93,6 +93,8 @@ extern SerialFake Serial;
 extern void game();
 extern bool game_w;
 
+extern short pole[64];
+
 extern "C" {
     short get_chess_pole(int index) {
         return pole[index];

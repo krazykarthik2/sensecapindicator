@@ -87,33 +87,23 @@ void chess_update_board_ui(void) {
         int engine_idx = (chess_player_color_ui == 1) ? (63 - i) : i;
         short p = get_chess_pole(engine_idx);
         const lv_img_dsc_t* img = NULL;
-        int color = 0; // 0 = white, 1 = black
-        
         switch(p) {
-            case 1: img = &img_pawn; color = 0; break;
-            case 2: img = &img_knight; color = 0; break;
-            case 3: img = &img_bishop; color = 0; break;
-            case 4: img = &img_rook; color = 0; break;
-            case 5: img = &img_queen; color = 0; break;
-            case 6: img = &img_king; color = 0; break;
-            case -1: img = &img_pawn; color = 1; break;
-            case -2: img = &img_knight; color = 1; break;
-            case -3: img = &img_bishop; color = 1; break;
-            case -4: img = &img_rook; color = 1; break;
-            case -5: img = &img_queen; color = 1; break;
-            case -6: img = &img_king; color = 1; break;
+            case 1: img = &img_pawn_white; break;
+            case 2: img = &img_knight_white; break;
+            case 3: img = &img_bishop_white; break;
+            case 4: img = &img_rook_white; break;
+            case 5: img = &img_queen_white; break;
+            case 6: img = &img_king_white; break;
+            case -1: img = &img_pawn_black; break;
+            case -2: img = &img_knight_black; break;
+            case -3: img = &img_bishop_black; break;
+            case -4: img = &img_rook_black; break;
+            case -5: img = &img_queen_black; break;
+            case -6: img = &img_king_black; break;
         }
         
         if (img != NULL) {
             lv_img_set_src(ui_chess_piece_imgs[i], img);
-            lv_obj_set_style_img_recolor_opa(ui_chess_piece_imgs[i], 255, 0);
-            if (color == 1) {
-                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0x000000), 0);
-                lv_obj_set_style_text_color(ui_chess_piece_imgs[i], lv_color_hex(0x000000), 0);
-            } else {
-                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0xFFFFFF), 0);
-                lv_obj_set_style_text_color(ui_chess_piece_imgs[i], lv_color_hex(0xFFFFFF), 0);
-            }
             lv_obj_clear_flag(ui_chess_piece_imgs[i], LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(ui_chess_piece_imgs[i], LV_OBJ_FLAG_HIDDEN);
