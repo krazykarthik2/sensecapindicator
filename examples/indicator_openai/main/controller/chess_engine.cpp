@@ -2209,7 +2209,7 @@ bool print_best(int dep) {
   String wei = to_String(pos[0].best.weight / 100.);
   if (pos[0].best.weight > 9000) wei = "+M" + to_String((10001 - pos[0].best.weight) / 2);
 
-  Serial.println("(" + wei + ") Depth: " + to_String(dep + depf) + get_time(tim) + " " + to_String(count / 1000) + "kN");
+  Serial.println("(" + wei + ") Depth: " + dep + depf + get_time(tim) + " " + to_String(count / 1000) + "kN");
   return ret;
 }
 
