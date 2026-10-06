@@ -1188,7 +1188,7 @@ static void __view_event_handler(void* handler_args, esp_event_base_t base, int3
             lv_snprintf(buf, sizeof(buf), "%02d:%02d", hour, timeinfo.tm_min);
             lv_label_set_text(ui_time2, buf);
             lv_label_set_text(ui_time3, buf);
-            lv_label_set_text(ui_time4, buf);
+            // lv_label_set_text(ui_time4, buf);
 
             switch (timeinfo.tm_wday)
             {
@@ -1320,8 +1320,8 @@ static void __view_event_handler(void* handler_args, esp_event_base_t base, int3
             lv_img_set_src(ui_wifi_st_5 , (void *)p_src);
             lv_img_set_src(ui_wifi_st_6 , (void *)p_src);
             lv_img_set_src(ui_wifi_st_chart , (void *)p_src);
-            lv_img_set_src(ui_wifi_st_7 , (void *)p_src);
-            lv_img_set_src(ui_wifi_st_8 , (void *)p_src);
+            // lv_img_set_src(ui_wifi_st_7 , (void *)p_src);
+            // lv_img_set_src(ui_wifi_st_8 , (void *)p_src);
             lv_img_set_src(ui_wifi_st_9 , (void *)p_src);
             lv_img_set_src(ui_wifi_st_10 , (void *)p_src);
             lv_img_set_src(ui_wifi_st_11 , (void *)p_src);
