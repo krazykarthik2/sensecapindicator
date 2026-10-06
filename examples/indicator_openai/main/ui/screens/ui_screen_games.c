@@ -62,26 +62,123 @@ void ui_screen_games_screen_init(void) {
 
 #include "chess_assets.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+extern void start_chess_engine_loop();
+extern void chess_engine_send_command(const char* cmd);
+extern bool chess_engine_check_update();
+extern short get_chess_pole(int index);
+
 // ---------------------------------------------
 // Chess Screen
 // ---------------------------------------------
 lv_obj_t * ui_chess_piece_imgs[64];
+int chess_selected_square = -1;
 
 void chess_back_cb(lv_event_t * e) {
     _ui_screen_change(ui_screen_games, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
 }
 
+void chess_update_board_ui(void) {
+    for(int i=0; i<64; i++) {
+        short p = get_chess_pole(i);
+        const lv_img_dsc_t* img = NULL;
+        int color = 0; // 0 = white, 1 = black
+        
+        switch(p) {
+            case 1: img = &img_pawn; color = 0; break;
+            case 2: img = &img_knight; color = 0; break;
+            case 3: img = &img_bishop; color = 0; break;
+            case 4: img = &img_rook; color = 0; break;
+            case 5: img = &img_queen; color = 0; break;
+            case 6: img = &img_king; color = 0; break;
+            case -1: img = &img_pawn; color = 1; break;
+            case -2: img = &img_knight; color = 1; break;
+            case -3: img = &img_bishop; color = 1; break;
+            case -4: img = &img_rook; color = 1; break;
+            case -5: img = &img_queen; color = 1; break;
+            case -6: img = &img_king; color = 1; break;
+        }
+        
+        if (img != NULL) {
+            lv_img_set_src(ui_chess_piece_imgs[i], img);
+            lv_obj_set_style_img_recolor_opa(ui_chess_piece_imgs[i], 255, 0);
+            if (color == 1) {
+                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0x000000), 0);
+            } else {
+                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0xFFFFFF), 0);
+            }
+            lv_obj_clear_flag(ui_chess_piece_imgs[i], LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ui_chess_piece_imgs[i], LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+}
+
+void chess_update_timer_cb(lv_timer_t * timer) {
+    if (chess_engine_check_update()) {
+        chess_update_board_ui();
+        lv_label_set_text(ui_chess_status, "Your Move!");
+    }
+}
+
+void chess_square_cb(lv_event_t * e) {
+    int index = (int)(intptr_t)lv_event_get_user_data(e);
+    
+    if (chess_selected_square == -1) {
+        chess_selected_square = index;
+        lv_obj_set_style_border_width(ui_chess_squares[index], 2, 0);
+        lv_obj_set_style_border_color(ui_chess_squares[index], lv_color_hex(0xFF0000), 0);
+    } else {
+        if (chess_selected_square == index) {
+            lv_obj_set_style_border_width(ui_chess_squares[index], 0, 0);
+            chess_selected_square = -1;
+        } else {
+            lv_obj_set_style_border_width(ui_chess_squares[chess_selected_square], 0, 0);
+            
+            int r1 = chess_selected_square / 8;
+            int c1 = chess_selected_square % 8;
+            int r2 = index / 8;
+            int c2 = index % 8;
+            
+            char move_cmd[8];
+            snprintf(move_cmd, sizeof(move_cmd), "%c%c%c%c", 'a' + c1, '8' - r1, 'a' + c2, '8' - r2);
+            chess_engine_send_command(move_cmd);
+            lv_label_set_text(ui_chess_status, "Thinking...");
+            
+            chess_selected_square = -1;
+        }
+    }
+}
+
+extern void set_chess_player_color(int color);
+
+void chess_engine_task(void *pvParameters) {
+    start_chess_engine_loop();
+    vTaskDelete(NULL);
+}
+
 void chess_play_cb(lv_event_t * e) {
     int color = (int)(intptr_t)lv_event_get_user_data(e);
-    // 0 = white, 1 = black, 2 = random
     
-    // The original chess branch author didn't wire the engine here!
-    // We would need to start a FreeRTOS task here that runs game()
+    if (color == 2) {
+        color = rand() % 2; // Random color
+    }
+    set_chess_player_color(color);
     
-    lv_label_set_text(ui_chess_status, "Playing...");
+    lv_label_set_text(ui_chess_status, "Starting Engine...");
     lv_obj_add_flag(ui_chess_white_btn, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_chess_black_btn, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_chess_random_btn, LV_OBJ_FLAG_HIDDEN);
+    
+    xTaskCreate(chess_engine_task, "chess_task", 8192, NULL, 5, NULL);
+    lv_timer_create(chess_update_timer_cb, 200, NULL);
+    
+    // Slight delay to let engine init its pole array
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    chess_update_board_ui();
+    lv_label_set_text(ui_chess_status, "Your Move!");
 }
 
 void ui_screen_chess_screen_init(void) {
@@ -118,20 +215,10 @@ void ui_screen_chess_screen_init(void) {
     lv_obj_set_style_grid_row_dsc_array(ui_chess_board, row_dsc, 0);
     lv_obj_set_style_pad_all(ui_chess_board, 0, 0);
 
-    const lv_img_dsc_t* initial_pieces[64] = {
-        &img_rook, &img_knight, &img_bishop, &img_queen, &img_king, &img_bishop, &img_knight, &img_rook,
-        &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn,
-        &img_rook, &img_knight, &img_bishop, &img_queen, &img_king, &img_bishop, &img_knight, &img_rook
-    };
-
     for(int i=0; i<64; i++) {
         ui_chess_squares[i] = lv_btn_create(ui_chess_board);
         lv_obj_set_grid_cell(ui_chess_squares[i], LV_GRID_ALIGN_STRETCH, i%8, 1, LV_GRID_ALIGN_STRETCH, i/8, 1);
+        lv_obj_add_event_cb(ui_chess_squares[i], chess_square_cb, LV_EVENT_CLICKED, (void *)(intptr_t)i);
         
         int r = i/8;
         int c = i%8;
@@ -145,18 +232,7 @@ void ui_screen_chess_screen_init(void) {
         
         ui_chess_piece_imgs[i] = lv_img_create(ui_chess_squares[i]);
         lv_obj_center(ui_chess_piece_imgs[i]);
-        
-        if (initial_pieces[i] != NULL) {
-            lv_img_set_src(ui_chess_piece_imgs[i], initial_pieces[i]);
-            // Black pieces on top rows (0,1), White pieces on bottom rows (6,7)
-            if (r <= 1) {
-                lv_obj_set_style_img_recolor_opa(ui_chess_piece_imgs[i], 255, 0);
-                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0x000000), 0);
-            } else {
-                lv_obj_set_style_img_recolor_opa(ui_chess_piece_imgs[i], 255, 0);
-                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0xFFFFFF), 0);
-            }
-        }
+        lv_obj_add_flag(ui_chess_piece_imgs[i], LV_OBJ_FLAG_HIDDEN); // Hidden until update
     }
 
     // Play options

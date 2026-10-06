@@ -57,18 +57,66 @@ inline String operator+(const String& a, const char* b) { String r=a; r+=b; retu
 
 template<class T> String to_String(T val) { return String(std::to_string(val)); }
 
+#include <string>
+
+std::string fake_serial_rx_buffer = "";
+bool chess_board_updated = false;
+
 struct SerialFake {
     void begin(int baud) {}
     template<typename T> void print(T t) {}
     template<typename T> void println(T t) {}
+    void println(String t) {
+        if (t.c_str() != NULL) {
+            std::string s = t.c_str();
+            if (s.find("make move:") != std::string::npos) {
+                chess_board_updated = true;
+            }
+        }
+    }
     void println() {}
-    int available() { return 0; }
+    int available() { return fake_serial_rx_buffer.empty() ? 0 : 1; }
     char read() { return 0; }
-    String readString() { return ""; }
+    String readString() {
+        if (!fake_serial_rx_buffer.empty()) {
+            std::string tmp = fake_serial_rx_buffer;
+            fake_serial_rx_buffer = "";
+            return String(tmp.c_str());
+        }
+        return String("");
+    }
     operator bool() const { return true; }
     bool operator!() const { return false; }
 };
 extern SerialFake Serial;
+
+extern void game();
+extern bool game_w;
+
+extern "C" {
+    extern short pole[64];
+    short get_chess_pole(int index) {
+        return pole[index];
+    }
+    void chess_engine_send_command(const char* cmd) {
+        fake_serial_rx_buffer = cmd;
+    }
+    bool chess_engine_check_update() {
+        if (chess_board_updated) {
+            chess_board_updated = false;
+            return true;
+        }
+        return false;
+    }
+    void start_chess_engine_loop() {
+        game();
+    }
+    void set_chess_player_color(int color) {
+        // color = 0 for white, 1 for black
+        // game_w = 1 means user plays white
+        game_w = (color == 0);
+    }
+}
 
 #define PROGMEM
 #define F(X) X
@@ -3705,7 +3753,7 @@ void game() {
   game_ply = 0;
   game_pos = pos[0];
   for (int i = 0; i < 64; i++) game_pole[i] = pole[i];
-  game_w = 1;
+  // game_w = 1; // Removed to respect UI selection
   // timelimith=5000; //!!!!!!!!!!!!
   while (!gameover) {
     while (s == "") {
