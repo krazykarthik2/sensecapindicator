@@ -1,4 +1,4 @@
-﻿import os
+import os
 
 pieces = {
     'pawn': [
@@ -194,6 +194,6 @@ for name, rows in pieces.items():
     out.append('')
 
 with open('chess_assets.h', 'w') as f:
-    f.write('\\n'.join(out))
+    f.write('\n'.join(out))
 
 print("Assets generated.")
