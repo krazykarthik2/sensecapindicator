@@ -109,8 +109,10 @@ void chess_update_board_ui(void) {
             lv_obj_set_style_img_recolor_opa(ui_chess_piece_imgs[i], 255, 0);
             if (color == 1) {
                 lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0x000000), 0);
+                lv_obj_set_style_text_color(ui_chess_piece_imgs[i], lv_color_hex(0x000000), 0);
             } else {
                 lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0xFFFFFF), 0);
+                lv_obj_set_style_text_color(ui_chess_piece_imgs[i], lv_color_hex(0xFFFFFF), 0);
             }
             lv_obj_clear_flag(ui_chess_piece_imgs[i], LV_OBJ_FLAG_HIDDEN);
         } else {

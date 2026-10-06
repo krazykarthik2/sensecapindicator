@@ -109,6 +109,7 @@ extern "C" {
         return false;
     }
     void start_chess_engine_loop() {
+        chess_board_updated = true;
         game();
     }
     void set_chess_player_color(int color) {
@@ -3756,6 +3757,7 @@ void game() {
   game_ply = 0;
   game_pos = pos[0];
   for (int i = 0; i < 64; i++) game_pole[i] = pole[i];
+  chess_board_updated = true;
   // game_w = 1; // Removed to respect UI selection
   // timelimith=5000; //!!!!!!!!!!!!
   while (!gameover) {
