@@ -60,9 +60,13 @@ void ui_screen_games_screen_init(void) {
     lv_obj_center(ui_chess_lbl);
 }
 
+#include "chess_assets.h"
+
 // ---------------------------------------------
 // Chess Screen
 // ---------------------------------------------
+lv_obj_t * ui_chess_piece_imgs[64];
+
 void chess_back_cb(lv_event_t * e) {
     _ui_screen_change(ui_screen_games, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
 }
@@ -70,7 +74,10 @@ void chess_back_cb(lv_event_t * e) {
 void chess_play_cb(lv_event_t * e) {
     int color = (int)(intptr_t)lv_event_get_user_data(e);
     // 0 = white, 1 = black, 2 = random
-    // start chess engine...
+    
+    // The original chess branch author didn't wire the engine here!
+    // We would need to start a FreeRTOS task here that runs game()
+    
     lv_label_set_text(ui_chess_status, "Playing...");
     lv_obj_add_flag(ui_chess_white_btn, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_chess_black_btn, LV_OBJ_FLAG_HIDDEN);
@@ -111,10 +118,21 @@ void ui_screen_chess_screen_init(void) {
     lv_obj_set_style_grid_row_dsc_array(ui_chess_board, row_dsc, 0);
     lv_obj_set_style_pad_all(ui_chess_board, 0, 0);
 
+    const lv_img_dsc_t* initial_pieces[64] = {
+        &img_rook, &img_knight, &img_bishop, &img_queen, &img_king, &img_bishop, &img_knight, &img_rook,
+        &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+        &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn, &img_pawn,
+        &img_rook, &img_knight, &img_bishop, &img_queen, &img_king, &img_bishop, &img_knight, &img_rook
+    };
+
     for(int i=0; i<64; i++) {
         ui_chess_squares[i] = lv_btn_create(ui_chess_board);
-        lv_obj_set_grid_cell(ui_chess_squares[i], LV_GRID_ALIGN_STRETCH, i%8, 1,
-                                                LV_GRID_ALIGN_STRETCH, i/8, 1);
+        lv_obj_set_grid_cell(ui_chess_squares[i], LV_GRID_ALIGN_STRETCH, i%8, 1, LV_GRID_ALIGN_STRETCH, i/8, 1);
+        
         int r = i/8;
         int c = i%8;
         if ((r+c)%2 == 0) {
@@ -125,10 +143,20 @@ void ui_screen_chess_screen_init(void) {
         lv_obj_set_style_radius(ui_chess_squares[i], 0, 0);
         lv_obj_set_style_border_width(ui_chess_squares[i], 0, 0);
         
-        lv_obj_t * lbl = lv_label_create(ui_chess_squares[i]);
-        lv_label_set_text(lbl, "");
-        lv_obj_center(lbl);
-        lv_obj_set_style_text_color(lbl, lv_color_hex(0x000000), 0);
+        ui_chess_piece_imgs[i] = lv_img_create(ui_chess_squares[i]);
+        lv_obj_center(ui_chess_piece_imgs[i]);
+        
+        if (initial_pieces[i] != NULL) {
+            lv_img_set_src(ui_chess_piece_imgs[i], initial_pieces[i]);
+            // Black pieces on top rows (0,1), White pieces on bottom rows (6,7)
+            if (r <= 1) {
+                lv_obj_set_style_img_recolor_opa(ui_chess_piece_imgs[i], 255, 0);
+                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0x000000), 0);
+            } else {
+                lv_obj_set_style_img_recolor_opa(ui_chess_piece_imgs[i], 255, 0);
+                lv_obj_set_style_img_recolor(ui_chess_piece_imgs[i], lv_color_hex(0xFFFFFF), 0);
+            }
+        }
     }
 
     // Play options
