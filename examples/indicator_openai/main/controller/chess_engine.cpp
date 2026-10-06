@@ -94,7 +94,6 @@ extern void game();
 extern bool game_w;
 
 extern "C" {
-    extern short pole[64];
     short get_chess_pole(int index) {
         return pole[index];
     }
