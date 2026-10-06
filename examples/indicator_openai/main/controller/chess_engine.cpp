@@ -1,4 +1,4 @@
-SerialFake Serial;
+
 // ESP32 chess engine 1.0
 // Sergey Urusov, ususovsv@gmail.com
 
@@ -39,13 +39,9 @@ public:
     int toInt() const { return atoi(c_str()); }
     void toUpperCase() { for(auto &c : *this) c = toupper(c); }
     void trim() {
-        size_t start = find_first_not_of(" 	
-
-");
+        size_t start = find_first_not_of(" \t\r\n");
         if(start == std::string::npos) { clear(); return; }
-        size_t end = find_last_not_of(" 	
-
-");
+        size_t end = find_last_not_of(" \t\r\n");
         *this = substr(start, end - start + 1);
     }
     int length() const { return std::string::length(); }
@@ -635,7 +631,7 @@ String get_time(long tim) {
 
 //****************************
 String str_pole(int i) {
-  return String(1, char('a' + i % 8)) + to_String(8 - i / 8);
+  return String(std::string(1, char('a' + i % 8))) + to_String(8 - i / 8);
 }
 
 //****************************
