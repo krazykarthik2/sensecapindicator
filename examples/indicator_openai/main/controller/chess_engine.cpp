@@ -15,6 +15,79 @@ SerialFake Serial;
 
 using namespace std;
 
+#include <string>
+#include <ctype.h>
+#include <stdlib.h>
+
+class String : public std::string {
+public:
+    String() : std::string() {}
+    String(const char* s) : std::string(s) {}
+    String(const std::string& s) : std::string(s) {}
+    String(int v) : std::string(std::to_string(v)) {}
+    
+    int indexOf(const char* s, int pos=0) const { 
+        size_t p = find(s, pos); 
+        return p == std::string::npos ? -1 : (int)p; 
+    }
+    int indexOf(char c, int pos=0) const { 
+        size_t p = find(c, pos); 
+        return p == std::string::npos ? -1 : (int)p; 
+    }
+    String substring(int start) const { return substr(start); }
+    String substring(int start, int end) const { return substr(start, end - start); }
+    int toInt() const { return atoi(c_str()); }
+    void toUpperCase() { for(auto &c : *this) c = toupper(c); }
+    void trim() {
+        size_t start = find_first_not_of(" 	
+
+");
+        if(start == std::string::npos) { clear(); return; }
+        size_t end = find_last_not_of(" 	
+
+");
+        *this = substr(start, end - start + 1);
+    }
+    int length() const { return std::string::length(); }
+    char charAt(int i) const { return (*this)[i]; }
+    String& operator+=(const String& other) { std::string::operator+=(other); return *this; }
+    String& operator+=(const char* other) { std::string::operator+=(other); return *this; }
+    bool operator==(const char* other) const { return std::string(*this) == other; }
+    bool operator==(const String& other) const { return std::string(*this) == other; }
+};
+inline String operator+(const char* a, const String& b) { String r=a; r+=b; return r; }
+inline String operator+(const String& a, const String& b) { String r=a; r+=b; return r; }
+inline String operator+(const String& a, const char* b) { String r=a; r+=b; return r; }
+
+template<class T> String to_String(T val) { return String(std::to_string(val)); }
+
+struct SerialFake {
+    void begin(int baud) {}
+    template<typename T> void print(T t) {}
+    template<typename T> void println(T t) {}
+    void println() {}
+    int available() { return 0; }
+    char read() { return 0; }
+    String readString() { return ""; }
+    operator bool() const { return true; }
+    bool operator!() const { return false; }
+};
+extern SerialFake Serial;
+
+#define PROGMEM
+#define F(X) X
+#define B1111 15
+#define delayMicroseconds(x) delay((x)/1000)
+
+static uint32_t millis() { return esp_timer_get_time() / 1000; }
+static uint32_t micros() { return esp_timer_get_time(); }
+static void delay(uint32_t ms) { vTaskDelay(ms / portTICK_PERIOD_MS); }
+long random(long max) { return rand() % max; }
+long random(long min, long max) { return min + rand() % (max - min); }
+
+SerialFake Serial;
+
+
 #define String string
 #define PROGMEM
 #define F(X) X
@@ -47,7 +120,7 @@ namespace std {
 }
 
 template<typename T>
-string to_String(T val) { return to_string(val); }
+String to_String(T val) { return to_string(val); }
 
 
 
@@ -103,8 +176,8 @@ String fenstr;
 const int MAXEPD = 5;
 int bestcount = 0;
 step_t bestmove[MAXEPD];  //
-boolean bestsolved = 0;
-boolean zero = 0;
+bool bestsolved = 0;
+bool zero = 0;
 
 position_t pos[MAXDEPTH];  //
 
@@ -122,18 +195,18 @@ int lazyeval = 1;
 int depth = 0;
 int nulldepth;
 int lazy;
-boolean endspiel = 0;
-boolean stats = 1;
+bool endspiel = 0;
+bool stats = 1;
 int lastbestdepth = 0;
 step_t lastbeststep;
-boolean halt = 0;
+bool halt = 0;
 
 step_t bufsteps[MAXSTEPS + 1];  //
 
 step_t game_steps[1000];  //
 position_t game_pos;      //
 int game_ply;             //
-boolean game_w;           //
+bool game_w;           //
 short game_pole[64];
 
 const short column[64] = {
@@ -737,9 +810,9 @@ String fenout(int l) {
   return s;
 }
 //****************************
-boolean fen(String ss) {
+bool fen(String ss) {
   char s = 'x', i = 0, j = 0;
-  boolean load = false;
+  bool load = false;
   for (int i = 0; i < 64; i++) pole[i] = 0;
   pos[0].w = 1;
   pos[0].wrk = 0;
@@ -1355,7 +1428,7 @@ void add_one(int l, int c1, int c2) {
   n_steps2++;
 }
 //****************************
-boolean checkd_w() {
+bool checkd_w() {
   signed char f2 = 0;
   int j = 0;
   while (diag_step[poswk][j] != 99) {
@@ -1383,7 +1456,7 @@ boolean checkd_w() {
   return (false);
 }
 //****************************
-boolean checkd_b() {
+bool checkd_b() {
   signed char f2 = 0;
   int j = 0;
   while (diag_step[posbk][j] != 99) {
@@ -1411,7 +1484,7 @@ boolean checkd_b() {
   return (false);
 }
 //****************************
-boolean check_w() {
+bool check_w() {
   signed char f2 = 0;
   int j = 0;
   if (pole[poswk] != fk) {
@@ -1461,7 +1534,7 @@ boolean check_w() {
 }
 
 //****************************
-boolean check_b() {
+bool check_b() {
   signed char f2 = 0;
   int j = 0;
   if (pole[posbk] != -fk) {
@@ -2142,11 +2215,11 @@ int quiescence(int l, int alpha, int beta, int depthleft) {
 }
 
 //****************************
-boolean print_best(int dep) {
+bool print_best(int dep) {
   if (halt || millis() - starttime > timelimith) return false;
   if (lastbestdepth == dep && pos[0].best.type == lastbeststep.type &&
       pos[0].best.c1 == lastbeststep.c1 && pos[0].best.c2 == lastbeststep.c2) return false;
-  boolean ret = false;
+  bool ret = false;
   if (pos[0].best.type == lastbeststep.type && pos[0].best.c1 == lastbeststep.c1 && pos[0].best.c2 == lastbeststep.c2) {
     for (int i = 0; i < MAXEPD; i++) {
       if (lastbeststep.c2 == bestmove[i].c2 && lastbeststep.c1 == bestmove[i].c1 && lastbeststep.type == bestmove[i].type) {
@@ -2167,7 +2240,7 @@ boolean print_best(int dep) {
   for (int i = 0; i < 10 - st.length(); i++) Serial.print(" ");
   String depf = "/" + to_String(depth + 1) + " ";
   long tim = (millis() - starttime) / 1000;
-  String wei = to_String(pos[0].best.weight / 100., 2);
+  String wei = to_String(pos[0].best.weight / 100.);
   if (pos[0].best.weight > 9000) wei = "+M" + to_String((10001 - pos[0].best.weight) / 2);
 
   Serial.println("(" + wei + ") Depth: " + to_String(dep + depf) + get_time(tim) + " " + to_String(count / 1000) + "kN");
@@ -2279,8 +2352,8 @@ int alphaBeta(int l, int alpha, int beta, int depthleft) {
   return score;
 }
 //****************************
-boolean is_draw() {  //
-  boolean draw = false;
+bool is_draw() {  //
+  bool draw = false;
   int cn = 0, cbw = 0, cbb = 0, co = 0, cb = 0, cw = 0;
   for (int i = 0; i < 64; i++) {
     if (abs(pole[i]) == 1) co++;
@@ -2300,9 +2373,9 @@ boolean is_draw() {  //
 }
 
 //****************************
-boolean solve_step() {
+bool solve_step() {
   int score;
-  boolean solved = 0;
+  bool solved = 0;
   count = 0;
   countin = 0;
   countall = 0;
@@ -2438,7 +2511,7 @@ boolean solve_step() {
     fdepth = 4;
     score = alphaBeta(0, ALPHA, BETA, level);
     unsigned long tim = millis() - starttime;
-    boolean out = 0;
+    bool out = 0;
     if (score >= BETA) out = 1;
     if (multipov || samebest > 2 || out) {
       samebest = 0;
@@ -3664,7 +3737,7 @@ void WAC(int numwac = 0) {  // WAC tests
 //****************************
 void game() {
   String s = "";
-  boolean gameover = 0;
+  bool gameover = 0;
   fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
   show_position();
   game_ply = 0;
@@ -3743,84 +3816,7 @@ void game() {
 }
 
 //****************************
-void setup() {
-  Serial.begin(115200);
-  while (!Serial)
-    ;
-  Serial.println(F("Start"));
-  xTaskCreate(taskOne,   /* Task function. */
-              "TaskOne", /* String with name of task. */
-              10000,     /* Stack size in bytes. */
-              NULL,      /* Parameter passed as input of the task */
-              1,         /* Priority of the task. */
-              NULL);     /* Task handle. */
 
-  //  hash =(hash_t *) malloc(MAXHASH*sizeof(hash_t));
-  //  Serial.print("Heap after malloc: ");
-  // Serial.println(ESP.getFreeHeap());
-}
 
-//****************************
-void loop() {
-  String s;
-  s = load_usb();
-  String s1 = s;
-  s1.toUpperCase();
-  int numwac = s1.toInt();
-  if (s.indexOf("/") == -1 && numwac > 0 && numwac < 301)
-    WAC(numwac);
-  else if (s1 == "WAC") {
-    WAC();
-  } else if (s1.indexOf("WAC") == 0) {
-    halt = 0;
-    int numwac = s.substring(3).toInt();
-    if (numwac > 0 && numwac < 301) WAC(numwac);
-    delay(1000);
-  } else if (s.indexOf("TIME") == 0 || s.indexOf("time") == 0) {
-    halt = 0;
-    int tim = s.substring(4).toInt();
-    if (tim != 0) timelimith = tim * 1000;
-    if (timelimith / 60000 > 0) {
-      Serial.print("timelimith = " + to_String(timelimith / 60000) + " min ");
-      int sec = (timelimith % 60000) / 1000;
-      if (sec > 0)
-        Serial.println(to_String(sec) + " sec");
-      else
-        Serial.println();
-    } else
-      Serial.println("timelimith = " + to_String(timelimith / 1000) + " sec");
-    delay(1000);
-  } else if (s.indexOf("nullmove") == 0 || s.indexOf("NULLMOVE") == 0) {
-    if (s.length() > 8) {
-      int n = s.substring(8).toInt();
-      if (!n)
-        nullmove = 0;
-      else
-        nullmove = 1;
-    }
-    Serial.println("nullmove = " + to_String(nullmove));
-  } else if (s.indexOf("futility") == 0 || s.indexOf("FUTILITY") == 0) {
-    if (s.length() > 9) {
-      int n = s.substring(9).toInt();
-      if (!n)
-        futility = 0;
-      else
-        futility = 1;
-    }
-    Serial.println("futility = " + to_String(futility));
-  } else if (s.indexOf("game") == 0 || s.indexOf("GAME") == 0) {
-    game();
-  } else {
-    // timelimith=180*60*1000; //180 .
-    halt = 0;
-    fen(s);
-    show_position();
-    solvefen(s);
-    Serial.println("move=" + str_step(pos[0].best));
-    movestep(0, pos[0].best);
-    movepos(0, pos[0].best);
-    Serial.println(fenout(1));
-    delay(1000);
-  }
-  delay(100);
-}
+void setup() {}
+void loop() {}

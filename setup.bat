@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 echo ===================================================
 echo   SenseCAP Indicator (To-Do App) - Setup Script
 echo ===================================================
@@ -7,6 +7,7 @@ echo ===================================================
 if "%IDF_PATH%"=="" (
     echo ESP-IDF environment not found. Attempting to load from C:\Espressif...
     if exist "C:\Espressif\frameworks\esp-idf-v5.1.1\export.bat" (
+        set "PATH=C:\Espressif\tools\idf-python\3.11.2;%PATH%"
         set "IDF_TOOLS_PATH=C:\Espressif"
         call "C:\Espressif\frameworks\esp-idf-v5.1.1\export.bat"
     ) else (
