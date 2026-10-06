@@ -95,6 +95,7 @@ static void __time_zone_set(struct view_data_time_cfg *p_cfg)
             snprintf(zone_str, sizeof(zone_str) - 1, "UTC+%d", 0 - zone);
         }
         setenv("TZ", zone_str, 1);
+        tzset();
     } else {
 
         char net_zone[64] = {0};
@@ -104,6 +105,7 @@ static void __time_zone_set(struct view_data_time_cfg *p_cfg)
 
         if( strlen(net_zone) > 0 ) {
             setenv("TZ", net_zone, 1);
+            tzset();
         }
     }
 }
@@ -173,15 +175,9 @@ static void __view_event_handler(void* handler_args, esp_event_base_t base, int3
             break;
         }
         case VIEW_EVENT_WIFI_ST: {
-            static bool fist = true;
             ESP_LOGI(TAG, "event: VIEW_EVENT_WIFI_ST");
             struct view_data_wifi_st *p_st = ( struct view_data_wifi_st *)event_data;
             if( p_st->is_network) {
-                
-                if( !fist) {
-                    break;
-                }
-                fist = false;
                 struct view_data_time_cfg cfg;
                 __time_cfg_get(&cfg);
                 if( cfg.auto_update ) {
@@ -235,8 +231,9 @@ int indicator_time_init(void)
     __time_cfg_restore();
 
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "pool.ntp.org");
-    sntp_setservername(1, "cn.ntp.org.cn");
+    sntp_setservername(0, "time.google.com");
+    sntp_setservername(1, "pool.ntp.org");
+    sntp_setservername(2, "cn.ntp.org.cn");
     sntp_set_time_sync_notification_cb(__time_sync_notification_cb);
     
     struct view_data_time_cfg cfg;

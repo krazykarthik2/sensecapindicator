@@ -294,7 +294,7 @@ if ( event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_ac
       _ui_screen_change( ui_screen_time, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
 }
 if ( event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT  ) {
-      _ui_screen_change( ui_screen_openai, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0);
+      _ui_screen_change( ui_screen_chartgpt_1, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0);
 }
 if ( event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP  ) {
       _ui_screen_change( ui_screen_time, LV_SCR_LOAD_ANIM_MOVE_TOP, 200, 0);
@@ -313,7 +313,7 @@ if ( event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_ac
       _ui_screen_change( ui_screen_time, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0);
 }
 if ( event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT  ) {
-      _ui_screen_change( ui_screen_openai, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
+      _ui_screen_change( ui_screen_chartgpt_1, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
 }
 if ( event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP  ) {
       _ui_screen_change( ui_screen_time, LV_SCR_LOAD_ANIM_MOVE_TOP, 200, 0);
@@ -1692,12 +1692,12 @@ ui_screen_date_time_screen_init();
 ui_screen_wifi_screen_init();
 ui_screen_factory_screen_init();
 ui_screen_sensor_chart_screen_init();
-ui_screen_openai_screen_init();
-ui_screen_openai_key_screen_init();
+// ui_screen_openai_screen_init();
+// ui_screen_openai_key_screen_init();
 ui_screen_chartgpt_1_screen_init();
 ui_screen_chartgpt_2_screen_init();
 ui_screen_dalle_1_screen_init();
 ui_screen_dalle_2_screen_init();
-ui_screen_openai_event_init();
+// ui_screen_openai_event_init();
 lv_disp_load_scr( ui_screen_time);
 }

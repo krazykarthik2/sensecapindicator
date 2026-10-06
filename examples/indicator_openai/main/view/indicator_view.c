@@ -846,9 +846,7 @@ void ui_event_chatgpt_btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
     lv_obj_t * cur_screen = lv_scr_act();
 if ( event_code == LV_EVENT_CLICKED &&  cur_screen == ui_screen_openai ) {
-    if(openai_is_ready()){
-        _ui_screen_change( ui_screen_chartgpt_1, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 200, 0);
-    }
+    _ui_screen_change( ui_screen_chartgpt_1, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 200, 0);
 }
 }
 
@@ -1565,7 +1563,7 @@ int indicator_view_init(void)
 
     wifi_list_event_init();
     sensor_chart_event_init();
-    openai_event_init();
+    // openai_event_init();
     
     int i  = 0;
     for( i = 0; i < VIEW_EVENT_ALL; i++ ) {

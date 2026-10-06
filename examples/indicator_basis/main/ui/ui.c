@@ -437,7 +437,7 @@ ui_city = lv_label_create(ui_location);
 lv_obj_set_width( ui_city, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_city, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_city, LV_ALIGN_RIGHT_MID );
-lv_label_set_text(ui_city," -- ");
+lv_label_set_text(ui_city,"Hello Karthik!");
 lv_obj_set_style_text_font(ui_city, &lv_font_montserrat_16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_location_Icon = lv_img_create(ui_background);
@@ -806,7 +806,7 @@ lv_obj_set_width( ui_setting_title, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_setting_title, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( ui_setting_title, 58 );
 lv_obj_set_y( ui_setting_title, 86 );
-lv_label_set_text(ui_setting_title,"Setting");
+lv_label_set_text(ui_setting_title,"Karthik's App");
 lv_obj_set_style_text_font(ui_setting_title, &ui_font_font1, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_setting_wifi = lv_btn_create(ui_screen_setting);

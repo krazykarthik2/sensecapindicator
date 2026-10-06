@@ -452,7 +452,7 @@ static int __time_zone_get(char *ip)
         // 0
         char *p_json = strstr(local_response_buffer, "\r\n\r\n");
         if( p_json ) {
-            p_json =  p_json + 4 + 3; //todo
+            p_json = strchr(p_json, '{');
             return __time_zone_data_prase(p_json);
         } else {
             return -1;
@@ -700,7 +700,7 @@ static int __time_zone_get(char *ip)
         // 0
         char *p_json = strstr(local_response_buffer, "\r\n\r\n");
         if( p_json ) {
-            p_json =  p_json + 4 + 3; //todo
+            p_json = strchr(p_json, '{');
             return __time_zone_data_prase(p_json);
         } else {
             return -1;
@@ -752,12 +752,13 @@ static void __indicator_http_task(void *p_arg)
             err =  __time_zone_get(__g_city_model.ip); 
             if( err == 0) {
                 char zone_str[32];
-                float zone = __g_city_model.local_utc_offset / 3600.0;
+                int hours = __g_city_model.local_utc_offset / 3600;
+                int minutes = abs(__g_city_model.local_utc_offset % 3600) / 60;
 
-                if( zone >= 0) {
-                    snprintf(zone_str, sizeof(zone_str) - 1, "UTC-%.1f", zone);
+                if( __g_city_model.local_utc_offset >= 0) {
+                    snprintf(zone_str, sizeof(zone_str) - 1, "UTC-%02d:%02d", hours, minutes);
                 } else {
-                    snprintf(zone_str, sizeof(zone_str) - 1, "UTC+%.1f", 0 - zone);
+                    snprintf(zone_str, sizeof(zone_str) - 1, "UTC+%02d:%02d", abs(hours), minutes);
                 }
                 indicator_time_net_zone_set( zone_str );
 
