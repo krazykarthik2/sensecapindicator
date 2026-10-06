@@ -214,6 +214,8 @@ void ui_screen_chess_screen_init(void) {
     lv_obj_set_style_grid_column_dsc_array(ui_chess_board, col_dsc, 0);
     lv_obj_set_style_grid_row_dsc_array(ui_chess_board, row_dsc, 0);
     lv_obj_set_style_pad_all(ui_chess_board, 0, 0);
+    lv_obj_set_style_pad_row(ui_chess_board, 0, 0);
+    lv_obj_set_style_pad_column(ui_chess_board, 0, 0);
 
     for(int i=0; i<64; i++) {
         ui_chess_squares[i] = lv_btn_create(ui_chess_board);
@@ -229,6 +231,7 @@ void ui_screen_chess_screen_init(void) {
         }
         lv_obj_set_style_radius(ui_chess_squares[i], 0, 0);
         lv_obj_set_style_border_width(ui_chess_squares[i], 0, 0);
+        lv_obj_set_style_pad_all(ui_chess_squares[i], 0, 0);
         
         ui_chess_piece_imgs[i] = lv_img_create(ui_chess_squares[i]);
         lv_obj_center(ui_chess_piece_imgs[i]);

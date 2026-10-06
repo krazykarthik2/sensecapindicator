@@ -125,7 +125,10 @@ extern "C" {
 
 static uint32_t millis() { return esp_timer_get_time() / 1000; }
 static uint32_t micros() { return esp_timer_get_time(); }
-static void delay(uint32_t ms) { vTaskDelay(ms / portTICK_PERIOD_MS); }
+static void delay(uint32_t ms) { 
+    TickType_t ticks = ms / portTICK_PERIOD_MS;
+    vTaskDelay(ticks > 0 ? ticks : 1); 
+}
 long random(long max) { return rand() % max; }
 long random(long min, long max) { return min + rand() % (max - min); }
 
