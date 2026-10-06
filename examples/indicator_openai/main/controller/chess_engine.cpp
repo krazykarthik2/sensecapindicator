@@ -630,12 +630,12 @@ String get_time(long tim) {
   char sz[10];
   if (tim > 360000) tim = 0;
   sprintf(sz, "%02d:%02d:%02d", tim / 3600, (tim % 3600) / 60, tim % 60);
-  return to_String(sz);
+  return String(sz);
 }
 
 //****************************
 String str_pole(int i) {
-  return to_String(char('a' + i % 8) + to_String(8 - i / 8));
+  return String(1, char('a' + i % 8)) + to_String(8 - i / 8);
 }
 
 //****************************
