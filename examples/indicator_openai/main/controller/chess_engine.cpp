@@ -1,4 +1,4 @@
-﻿SerialFake Serial;
+SerialFake Serial;
 // ESP32 chess engine 1.0
 // Sergey Urusov, ususovsv@gmail.com
 
@@ -87,40 +87,6 @@ long random(long min, long max) { return min + rand() % (max - min); }
 
 SerialFake Serial;
 
-
-#define String string
-#define PROGMEM
-#define F(X) X
-
-static uint32_t millis() { return esp_timer_get_time() / 1000; }
-static uint32_t micros() { return esp_timer_get_time(); }
-static void delay(uint32_t ms) { vTaskDelay(ms / portTICK_PERIOD_MS); }
-long random(long max) { return rand() % max; }
-long random(long min, long max) { return min + rand() % (max - min); }
-
-struct SerialFake {
-    void begin(int baud) {}
-    void print(const string& s) {}
-    void print(const char* s) {}
-    void print(int n) {}
-    void print(char c) {}
-    void println(const string& s) {}
-    void println(const char* s) {}
-    void println(int n) {}
-    void println() {}
-    int available() { return 0; }
-    char read() { return 0; }
-    string readString() { return ""; }
-};
-extern SerialFake Serial;
-
-namespace std {
-    inline string to_string(const string& s) { return s; }
-    inline string to_string(const char* s) { return string(s); }
-}
-
-template<typename T>
-String to_String(T val) { return to_string(val); }
 
 
 
@@ -3750,7 +3716,7 @@ void game() {
       s = Serial.readString();
       delay(1);
     }
-    s.trim();
+    { String _s(s); _s.trim(); s = _s; } // trim whitespace
     if (s == "exit") {
       gameover = 1;
       continue;
