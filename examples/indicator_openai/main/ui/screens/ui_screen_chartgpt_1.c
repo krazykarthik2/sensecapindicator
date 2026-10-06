@@ -153,29 +153,30 @@ static void cancel_cb(lv_event_t * e) {
     lv_obj_add_flag(edit_keyboard, LV_OBJ_FLAG_HIDDEN);
 }
 
-static void back_cb(lv_event_t * e) {
-    _ui_screen_change(ui_screen_time, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
+static void ui_event_screen_chartgpt_1(lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+    if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        _ui_screen_change(ui_screen_setting, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0);
+    }
+    if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        _ui_screen_change(ui_screen_sensor, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
+    }
+    if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
+        _ui_screen_change(ui_screen_time, LV_SCR_LOAD_ANIM_MOVE_TOP, 200, 0);
+    }
 }
 
 void ui_screen_chartgpt_1_screen_init(void) {
     ui_screen_chartgpt_1 = lv_obj_create(NULL);
     load_tasks();
     lv_obj_set_style_bg_color(ui_screen_chartgpt_1, lv_color_hex(0x222222), 0);
+    lv_obj_add_event_cb(ui_screen_chartgpt_1, ui_event_screen_chartgpt_1, LV_EVENT_ALL, NULL);
 
     // Title
     ui_chatgpt_1_title = lv_label_create(ui_screen_chartgpt_1);
     lv_label_set_text(ui_chatgpt_1_title, "To-Do List");
     lv_obj_set_style_text_font(ui_chatgpt_1_title, &lv_font_montserrat_20, 0);
     lv_obj_align(ui_chatgpt_1_title, LV_ALIGN_TOP_MID, 0, 10);
-
-    // Back button
-    ui_chatgpt_back_btn = lv_btn_create(ui_screen_chartgpt_1);
-    lv_obj_set_size(ui_chatgpt_back_btn, 60, 40);
-    lv_obj_set_pos(ui_chatgpt_back_btn, 10, 10);
-    lv_obj_t * back_lbl = lv_label_create(ui_chatgpt_back_btn);
-    lv_label_set_text(back_lbl, LV_SYMBOL_LEFT);
-    lv_obj_center(back_lbl);
-    lv_obj_add_event_cb(ui_chatgpt_back_btn, back_cb, LV_EVENT_CLICKED, NULL);
 
     // Add button
     lv_obj_t * add_btn = lv_btn_create(ui_screen_chartgpt_1);
