@@ -1699,5 +1699,9 @@ ui_screen_chartgpt_2_screen_init();
 ui_screen_dalle_1_screen_init();
 ui_screen_dalle_2_screen_init();
 // ui_screen_openai_event_init();
+void ui_screen_games_screen_init(void);
+void ui_screen_chess_screen_init(void);
+ui_screen_games_screen_init();
+ui_screen_chess_screen_init();
 lv_disp_load_scr( ui_screen_time);
 }

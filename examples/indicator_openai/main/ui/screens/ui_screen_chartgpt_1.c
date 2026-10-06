@@ -156,7 +156,8 @@ static void cancel_cb(lv_event_t * e) {
 static void ui_event_screen_chartgpt_1(lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);
     if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
-        _ui_screen_change(ui_screen_setting, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0);
+        extern lv_obj_t * ui_screen_games;
+        _ui_screen_change(ui_screen_games, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0);
     }
     if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
         _ui_screen_change(ui_screen_sensor, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
