@@ -1,4 +1,4 @@
-﻿#include "../ui.h"
+#include "../ui.h"
 
 // Define screens
 lv_obj_t * ui_screen_games;
@@ -25,6 +25,11 @@ void ui_event_screen_games(lv_event_t * e) {
         extern lv_obj_t * ui_screen_chartgpt_1;
         _ui_screen_change(ui_screen_chartgpt_1, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
     }
+    if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        // swipe left -> go to setting list
+        extern lv_obj_t * ui_screen_setting;
+        _ui_screen_change(ui_screen_setting, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0);
+    }
 }
 
 void chess_btn_cb(lv_event_t * e) {
@@ -34,6 +39,7 @@ void chess_btn_cb(lv_event_t * e) {
 void ui_screen_games_screen_init(void) {
     ui_screen_games = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui_screen_games, lv_color_hex(0x222222), 0);
+    lv_obj_clear_flag(ui_screen_games, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(ui_screen_games, ui_event_screen_games, LV_EVENT_ALL, NULL);
 
     // Title
@@ -74,6 +80,7 @@ void chess_play_cb(lv_event_t * e) {
 void ui_screen_chess_screen_init(void) {
     ui_screen_chess = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui_screen_chess, lv_color_hex(0x222222), 0);
+    lv_obj_clear_flag(ui_screen_chess, LV_OBJ_FLAG_SCROLLABLE);
 
     // Status label
     ui_chess_status = lv_label_create(ui_screen_chess);
@@ -93,6 +100,7 @@ void ui_screen_chess_screen_init(void) {
     // Chess board (8x8 grid)
     ui_chess_board = lv_obj_create(ui_screen_chess);
     lv_obj_set_size(ui_chess_board, 320, 320);
+    lv_obj_clear_flag(ui_chess_board, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_align(ui_chess_board, LV_ALIGN_CENTER, 0, 20);
     lv_obj_set_layout(ui_chess_board, LV_LAYOUT_GRID);
     

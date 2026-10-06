@@ -9,4 +9,4 @@ if (Test-Path $bin_path) {
 $env:IDF_TOOLS_PATH="C:\Espressif"
 . C:\Espressif\frameworks\esp-idf-v5.1.1\export.ps1
 
-idf.py build flash -p COM25
+idf.py build flash -p COM21
