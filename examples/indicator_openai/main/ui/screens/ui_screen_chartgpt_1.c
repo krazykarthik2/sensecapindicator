@@ -148,7 +148,7 @@ static void cancel_cb(lv_event_t * e) {
 }
 
 static void back_cb(lv_event_t * e) {
-    _ui_screen_change(ui_screen_openai, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
+    _ui_screen_change(ui_screen_time, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
 }
 
 void ui_screen_chartgpt_1_screen_init(void) {
@@ -218,14 +218,7 @@ void ui_screen_chartgpt_1_screen_init(void) {
     lv_keyboard_set_textarea(edit_keyboard, edit_textarea);
     lv_obj_add_flag(edit_keyboard, LV_OBJ_FLAG_HIDDEN);
 
-    // Initial data
-    strcpy(tasks[0].name, "Build To-Do App");
-    tasks[0].active = true;
-    tasks[0].done = true;
-    
-    strcpy(tasks[1].name, "Fix Bugs");
-    tasks[1].active = true;
-    tasks[1].done = false;
+    // Initial data removed to allow NVS persistence
 
     render_task_list();
 

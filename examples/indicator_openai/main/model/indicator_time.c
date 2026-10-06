@@ -81,33 +81,10 @@ static void __time_sync_stop(void)
 
 static void __time_zone_set(struct view_data_time_cfg *p_cfg)
 {
-    if ( !p_cfg->auto_update_zone) {
-        
-        int8_t zone = p_cfg->zone;
-        char zone_str[32];
-
-        if( p_cfg->daylight) {
-            zone -=1; //todo
-        }
-        if( zone >= 0) {
-            snprintf(zone_str, sizeof(zone_str) - 1, "UTC-%d", zone);
-        } else {
-            snprintf(zone_str, sizeof(zone_str) - 1, "UTC+%d", 0 - zone);
-        }
-        setenv("TZ", zone_str, 1);
-        tzset();
-    } else {
-
-        char net_zone[64] = {0};
-        xSemaphoreTake(__g_data_mutex, portMAX_DELAY);
-        memcpy(net_zone, &__g_time_model.net_zone, sizeof(net_zone));
-        xSemaphoreGive(__g_data_mutex);
-
-        if( strlen(net_zone) > 0 ) {
-            setenv("TZ", net_zone, 1);
-            tzset();
-        }
-    }
+    // Hardcode to India Standard Time (UTC+05:30)
+    // POSIX TZ format requires inverted sign: IST-05:30
+    setenv("TZ", "IST-05:30", 1);
+    tzset();
 }
 
 static void __time_cfg(struct view_data_time_cfg *p_cfg, bool set_time)
@@ -226,7 +203,7 @@ int indicator_time_init(void)
 {
     __g_data_mutex  =  xSemaphoreCreateMutex();
 
-    memset(__g_time_model.net_zone, 0 , sizeof(__g_time_model.net_zone));
+    strcpy(__g_time_model.net_zone, "UTC-05:30");
 
     __time_cfg_restore();
 
