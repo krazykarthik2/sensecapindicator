@@ -76,13 +76,16 @@ extern short get_chess_pole(int index);
 lv_obj_t * ui_chess_piece_imgs[64];
 int chess_selected_square = -1;
 
+int chess_player_color_ui = 0;
+
 void chess_back_cb(lv_event_t * e) {
     _ui_screen_change(ui_screen_games, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 200, 0);
 }
 
 void chess_update_board_ui(void) {
     for(int i=0; i<64; i++) {
-        short p = get_chess_pole(i);
+        int engine_idx = (chess_player_color_ui == 1) ? (63 - i) : i;
+        short p = get_chess_pole(engine_idx);
         const lv_img_dsc_t* img = NULL;
         int color = 0; // 0 = white, 1 = black
         
@@ -137,10 +140,13 @@ void chess_square_cb(lv_event_t * e) {
         } else {
             lv_obj_set_style_border_width(ui_chess_squares[chess_selected_square], 0, 0);
             
-            int r1 = chess_selected_square / 8;
-            int c1 = chess_selected_square % 8;
-            int r2 = index / 8;
-            int c2 = index % 8;
+            int engine_sq1 = (chess_player_color_ui == 1) ? (63 - chess_selected_square) : chess_selected_square;
+            int engine_sq2 = (chess_player_color_ui == 1) ? (63 - index) : index;
+            
+            int r1 = engine_sq1 / 8;
+            int c1 = engine_sq1 % 8;
+            int r2 = engine_sq2 / 8;
+            int c2 = engine_sq2 % 8;
             
             char move_cmd[8];
             snprintf(move_cmd, sizeof(move_cmd), "%c%c%c%c", 'a' + c1, '8' - r1, 'a' + c2, '8' - r2);
@@ -165,6 +171,7 @@ void chess_play_cb(lv_event_t * e) {
     if (color == 2) {
         color = rand() % 2; // Random color
     }
+    chess_player_color_ui = color;
     set_chess_player_color(color);
     
     lv_label_set_text(ui_chess_status, "Starting Engine...");
