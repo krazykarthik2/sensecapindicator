@@ -99,14 +99,14 @@ void ui_screen_chess_screen_init(void) {
 
     // Chess board (8x8 grid)
     ui_chess_board = lv_obj_create(ui_screen_chess);
-    lv_obj_set_size(ui_chess_board, 320, 320);
+    lv_obj_set_size(ui_chess_board, 240, 240);
     lv_obj_clear_flag(ui_chess_board, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_align(ui_chess_board, LV_ALIGN_CENTER, 0, 20);
     lv_obj_set_layout(ui_chess_board, LV_LAYOUT_GRID);
     
-    // Create grid layout
-    static lv_coord_t col_dsc[] = {40, 40, 40, 40, 40, 40, 40, 40, LV_GRID_TEMPLATE_LAST};
-    static lv_coord_t row_dsc[] = {40, 40, 40, 40, 40, 40, 40, 40, LV_GRID_TEMPLATE_LAST};
+    // Create grid layout (30px per square)
+    static lv_coord_t col_dsc[] = {30, 30, 30, 30, 30, 30, 30, 30, LV_GRID_TEMPLATE_LAST};
+    static lv_coord_t row_dsc[] = {30, 30, 30, 30, 30, 30, 30, 30, LV_GRID_TEMPLATE_LAST};
     lv_obj_set_style_grid_column_dsc_array(ui_chess_board, col_dsc, 0);
     lv_obj_set_style_grid_row_dsc_array(ui_chess_board, row_dsc, 0);
     lv_obj_set_style_pad_all(ui_chess_board, 0, 0);
