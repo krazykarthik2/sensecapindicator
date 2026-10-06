@@ -62,6 +62,11 @@ template<class T> String to_String(T val) { return String(std::to_string(val)); 
 std::string fake_serial_rx_buffer = "";
 bool chess_board_updated = false;
 
+extern short pole[64];
+short display_pole[64];
+
+extern "C" int chess_game_state = 0;
+
 struct SerialFake {
     void begin(int baud) {}
     template<typename T> void print(T t) {}
@@ -70,6 +75,17 @@ struct SerialFake {
         if (t.c_str() != NULL) {
             std::string s = t.c_str();
             if (s.find("make move:") != std::string::npos) {
+                for(int i = 0; i < 64; i++) display_pole[i] = pole[i];
+                chess_game_state = 0;
+                chess_board_updated = true;
+            } else if (s.find("CHECKMATE") != std::string::npos) {
+                chess_game_state = 1;
+                chess_board_updated = true;
+            } else if (s.find("STALEMATE") != std::string::npos || s.find("PAT!") != std::string::npos) {
+                chess_game_state = 2;
+                chess_board_updated = true;
+            } else if (s.find("move illegal") != std::string::npos) {
+                chess_game_state = 3;
                 chess_board_updated = true;
             }
         }
@@ -93,11 +109,11 @@ extern SerialFake Serial;
 extern void game();
 extern bool game_w;
 
-extern short pole[64];
+void taskOne(void *parameter);
 
 extern "C" {
     short get_chess_pole(int index) {
-        return pole[index];
+        return display_pole[index];
     }
     void chess_engine_send_command(const char* cmd) {
         fake_serial_rx_buffer = cmd;
@@ -110,6 +126,12 @@ extern "C" {
         return false;
     }
     void start_chess_engine_loop() {
+        static bool task_created = false;
+        if (!task_created) {
+            xTaskCreate(taskOne, "TaskOne", 4096, NULL, 4, NULL);
+            task_created = true;
+        }
+        for(int i=0; i<64; i++) display_pole[i] = pole[i];
         chess_board_updated = true;
         game();
     }
@@ -194,12 +216,12 @@ step_t bestmove[MAXEPD];  //
 bool bestsolved = 0;
 bool zero = 0;
 
-position_t pos[MAXDEPTH];  //
+position_t *pos = NULL;
 
 int TRACE = 0;
 short pole[64];
 
-unsigned long timelimith = 1 * 60 * 1000;  //    (1 )
+unsigned long timelimith = 3000; // 3 seconds
 unsigned long starttime;
 
 int nullmove = 1;
@@ -216,12 +238,13 @@ int lastbestdepth = 0;
 step_t lastbeststep;
 bool halt = 0;
 
-step_t bufsteps[MAXSTEPS + 1];  //
+#include "esp_heap_caps.h"
+step_t *bufsteps = NULL;
 
-step_t game_steps[1000];  //
-position_t game_pos;      //
-int game_ply;             //
-bool game_w;           //
+step_t *game_steps = NULL;
+position_t game_pos;
+int game_ply;
+bool game_w;
 short game_pole[64];
 
 const short column[64] = {
@@ -1026,6 +1049,17 @@ void getbm(int n, String ep) {
             bestmove[n] = pos[0].steps[i];
         }
       }
+    }
+    
+    if (bestmove[n].c1 == -1 && ep.length() >= 4 && ep.charAt(0) >= 'a' && ep.charAt(0) <= 'h' && ep.charAt(1) >= '1' && ep.charAt(1) <= '8' && ep.charAt(2) >= 'a' && ep.charAt(2) <= 'h' && ep.charAt(3) >= '1' && ep.charAt(3) <= '8') {
+        int c1_test = 8 * (7 - (int(ep.charAt(1)) - int('1'))) + int(ep.charAt(0)) - int('a');
+        int c2_test = 8 * (7 - (int(ep.charAt(3)) - int('1'))) + int(ep.charAt(2)) - int('a');
+        for (int i = 0; i < pos[0].n_steps; i++) {
+            if (pos[0].steps[i].c1 == c1_test && pos[0].steps[i].c2 == c2_test) {
+                bestmove[n] = pos[0].steps[i];
+                return;
+            }
+        }
     }
   }
 }
@@ -3751,6 +3785,9 @@ void WAC(int numwac = 0) {  // WAC tests
 
 //****************************
 void game() {
+  if (!bufsteps) bufsteps = (step_t*)heap_caps_calloc(1, (MAXSTEPS + 1) * sizeof(step_t), MALLOC_CAP_SPIRAM);
+  if (!game_steps) game_steps = (step_t*)heap_caps_calloc(1, 1000 * sizeof(step_t), MALLOC_CAP_SPIRAM);
+  if (!pos) pos = (position_t*)heap_caps_calloc(1, MAXDEPTH * sizeof(position_t), MALLOC_CAP_SPIRAM);
   String s = "";
   bool gameover = 0;
   fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
@@ -3762,9 +3799,13 @@ void game() {
   // game_w = 1; // Removed to respect UI selection
   // timelimith=5000; //!!!!!!!!!!!!
   while (!gameover) {
-    while (s == "") {
+    bool is_user_turn = (game_ply % 2 == 0 && game_w) || (game_ply % 2 != 0 && !game_w);
+    while (is_user_turn && s == "") {
       s = Serial.readString();
       delay(1);
+    }
+    if (!is_user_turn && s == "") {
+        s = "go";
     }
     { String _s(s); _s.trim(); s = _s; } // trim whitespace
     if (s == "exit") {
@@ -3787,9 +3828,30 @@ void game() {
       s = "";
       continue;
     }
-    bool is_user_turn = (game_ply % 2 == 0 && game_w) || (game_ply % 2 != 0 && !game_w);
+    is_user_turn = (game_ply % 2 == 0 && game_w) || (game_ply % 2 != 0 && !game_w);
     if (is_user_turn) {  //
       generate_steps(0);
+      
+      int legal = 0;
+      for (int i = 0; i < pos[0].n_steps; i++) {
+        movestep(0, pos[0].steps[i]);
+        int check = pos[0].w ? check_w() : check_b();
+        if (!check) {
+            pos[0].steps[legal] = pos[0].steps[i];
+            legal++;
+        }
+        backstep(0, pos[0].steps[i]);
+      }
+      pos[0].n_steps = legal;
+      
+      if (legal == 0) {
+          int check = pos[0].w ? check_w() : check_b();
+          if (check) Serial.println("CHECKMATE");
+          else Serial.println("STALEMATE");
+          gameover = 1;
+          continue;
+      }
+      
       bestmove[0].c1 = -1;
       getbm(0, s);
       if (bestmove[0].c1 != -1) {  //
@@ -3823,7 +3885,10 @@ void game() {
         game_ply++;
         show_position();
       } else {
-        Serial.println("ERROR!");
+        int check = pos[0].w ? check_w() : check_b();
+        if (check) Serial.println("CHECKMATE");
+        else Serial.println("STALEMATE");
+        gameover = 1;
       }
       s = "";
     }

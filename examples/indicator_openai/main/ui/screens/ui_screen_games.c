@@ -64,6 +64,7 @@ void ui_screen_games_screen_init(void) {
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_heap_caps.h"
 
 extern void start_chess_engine_loop();
 extern void chess_engine_send_command(const char* cmd);
@@ -83,10 +84,15 @@ void chess_back_cb(lv_event_t * e) {
 }
 
 void chess_update_board_ui(void) {
+    int pieces_found = 0;
+    
     for(int i=0; i<64; i++) {
         int engine_idx = (chess_player_color_ui == 1) ? (63 - i) : i;
         short p = get_chess_pole(engine_idx);
         const lv_img_dsc_t* img = NULL;
+        
+        if (p != 0) pieces_found++;
+        
         switch(p) {
             case 1: img = &img_pawn_white; break;
             case 2: img = &img_knight_white; break;
@@ -109,12 +115,24 @@ void chess_update_board_ui(void) {
             lv_obj_add_flag(ui_chess_piece_imgs[i], LV_OBJ_FLAG_HIDDEN);
         }
     }
+    
+    char status_str[32];
+    extern int chess_game_state;
+    if (chess_game_state == 1) {
+        snprintf(status_str, sizeof(status_str), "CHECKMATE!");
+    } else if (chess_game_state == 2) {
+        snprintf(status_str, sizeof(status_str), "STALEMATE!");
+    } else if (chess_game_state == 3) {
+        snprintf(status_str, sizeof(status_str), "Illegal move!");
+    } else {
+        snprintf(status_str, sizeof(status_str), "Pieces: %d", pieces_found);
+    }
+    lv_label_set_text(ui_chess_status, status_str);
 }
 
 void chess_update_timer_cb(lv_timer_t * timer) {
     if (chess_engine_check_update()) {
         chess_update_board_ui();
-        lv_label_set_text(ui_chess_status, "Your Move!");
     }
 }
 
@@ -171,13 +189,23 @@ void chess_play_cb(lv_event_t * e) {
     lv_obj_add_flag(ui_chess_black_btn, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_chess_random_btn, LV_OBJ_FLAG_HIDDEN);
     
-    xTaskCreate(chess_engine_task, "chess_task", 8192, NULL, 5, NULL);
-    lv_timer_create(chess_update_timer_cb, 200, NULL);
+    static bool chess_engine_started = false;
+    if (!chess_engine_started) {
+        BaseType_t ret = xTaskCreate(chess_engine_task, "chess_task", 4096, NULL, 5, NULL);
+        if (ret == pdPASS) {
+            lv_timer_create(chess_update_timer_cb, 200, NULL);
+            chess_engine_started = true;
+        } else {
+            lv_label_set_text(ui_chess_status, "Err: Task Mem");
+            return;
+        }
+    } else {
+        // Task already running, just force a UI update
+    }
     
     // Slight delay to let engine init its pole array
     vTaskDelay(500 / portTICK_PERIOD_MS);
     chess_update_board_ui();
-    lv_label_set_text(ui_chess_status, "Your Move!");
 }
 
 void ui_screen_chess_screen_init(void) {
